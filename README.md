@@ -44,7 +44,7 @@ Key Features:
 ### **1. AFL player stats puller** 🏉
 This small script pulls data about Australian Football League players from 'afltables' to inform various records such as win/loss rates and winning/losing margins when specific players achieve a certain feat during any given game. 
 
-🔗 [AFL Player stats puller](https://github.com/land-use-trade-offs/luto-2.0)
+🔗 [Interactive AFL Player stats puller](https://github.com/schotsy/schotsy.github.io/blob/main/interactive%20AFL%20stats%20puller)
 
 ---
 ### **2. Officiating bias in Australian Rules Football: A statistical analysis** 🏉
