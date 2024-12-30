@@ -30,7 +30,7 @@ Key Contributions:
 🔗 [Project Repository](https://github.com/land-use-trade-offs/luto-2.0)
 
 ---
-### **3. "Renovation Pathways" Australian Residential Housing Renovation Analysis**
+### **3. Australian Residential Housing Renovation "Renovation Pathways" Economic Analysis**
 Visualisation of renovation economic analysis data 
 Key Features:
 - Interactive Shiny application visualising marginal abatement costs for different residential renovations in Australia. Can be easily split by state, upgrade type ['Quick-fix'; 'Modest'; 'Climate-ready'] and housing type ['House'; 'Townhouse'; 'Appartment'] according to user preferences. Other outputs developed and visualised include: cost-benefit box and whisker plots, net present value column charts, and average energy bill savings bar charts. 
