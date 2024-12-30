@@ -2,11 +2,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-# Define global constants
-TECHNOLOGIES = [
-    'Hydro', 'Black coal', 'Brown coal', 'Natural gas',
-    'Oil products', 'Wind', 'Large-scale solar PV', 'Small-scale solar PV'
-]
+# Define constants for the script
+INPUT_PATH = "./data/"  # Directory for input data
+CSV_FILENAME = "electricity_generation.csv"  # File name of the dataset
+TECHNOLOGIES = ['Hydro', 'Black coal', 'Brown coal', 'Natural gas', 'Oil products', 'Wind', 'Large-scale solar PV', 'Small-scale solar PV']
 COLORS = {
     'Hydro': '#00b0e0',
     'Black coal': '#000000',
@@ -19,75 +18,72 @@ COLORS = {
 }
 YEARS = list(range(2022, 2051))
 
-# Utility function to plot stacked area chart
+# Load the data
+file_path = INPUT_PATH + CSV_FILENAME
+data = pd.read_csv(file_path)
+
 def plot_stacked_area(ax1, ax2, state_data):
+    """Plots a stacked area chart for the given state data."""
     bottom = np.zeros(len(YEARS))
-    
+
     for tech in TECHNOLOGIES:
         tech_data = state_data[state_data['Technology'] == tech].iloc[0, 2:].values.astype(float)
-
         if np.any(tech_data > 0):
-            pre_2025, post_2024 = tech_data[:3], tech_data[3:]
-            
-            # Plot historical data
-            ax1.fill_between(YEARS[:3], bottom[:3], bottom[:3] + pre_2025,
-                             facecolor=COLORS.get(tech, '#808080'), hatch='//', edgecolor='none')
+            # Separate historical and modeled data
+            pre_2025 = tech_data[:3]  # Data from 2022-2024 (historical)
+            post_2024 = tech_data[3:]  # Data from 2025 onwards (modeled)
 
-            # Plot modeled data
+            # Plot pre-2025 (historical) data with an etched pattern
+            ax1.fill_between(YEARS[:3], bottom[:3], bottom[:3] + pre_2025,
+                             facecolor=COLORS.get(tech, '#808080'),
+                             hatch='//', edgecolor='none')
+
+            # Plot 2025 onwards (modeled) with solid colors
             ax1.fill_between(YEARS[3:], bottom[3:], bottom[3:] + post_2024,
-                             facecolor=COLORS.get(tech, '#808080'), edgecolor='none')
+                             facecolor=COLORS.get(tech, '#808080'),
+                             edgecolor='none')
 
             bottom += tech_data
 
-    # Plot renewables percentage
     renewables_data = state_data[state_data['Technology'] == 'Renewables %'].iloc[0, 2:].values.astype(float)
     ax2.plot(YEARS, renewables_data * 100, '--', color='green', label='Renewables %')
 
-# Function to configure axes and titles
 def configure_axes(ax1, ax2, title):
+    """Configures axes for the plot."""
+    ax1.spines['top'].set_visible(False)
+    ax2.spines['top'].set_visible(False)
     ax1.set_title(title)
     ax1.set_xlabel('Year')
     ax1.set_ylabel('Electricity Generation')
     ax2.set_ylabel('Renewables Percentage (%)')
     ax2.set_ylim(0, 100)
-    ax1.spines['top'].set_visible(False)
-    ax2.spines['top'].set_visible(False)
 
-# Plot electricity generation mix for a specific state
-def plot_state_electricity_mix(input_path, csv_filename, state):
-    df = pd.read_csv(input_path + csv_filename)
-    state_data = df[df['States'] == state]
-
-    fig, ax1 = plt.subplots(figsize=(12, 6))
+def plot_state_electricity_mix(state):
+    """Plots electricity generation mix for a specific state."""
+    state_data = data[data['States'] == state]
+    fig, ax1 = plt.subplots(figsize=(15, 8))
     ax2 = ax1.twinx()
 
     plot_stacked_area(ax1, ax2, state_data)
     configure_axes(ax1, ax2, f'{state} Electricity Generation Mix')
 
-    # Add legend
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', bbox_to_anchor=(1.05, 1))
-
     plt.tight_layout()
     plt.show()
 
-# Plot electricity generation mix for all states
-def plot_all_states_electricity_mix(input_path, csv_filename):
-    df = pd.read_csv(input_path + csv_filename)
-    states = df['States'].unique()
-
+def plot_all_states_electricity_mix():
+    """Plots electricity generation mix for all states."""
+    states = data['States'].unique()
     fig, axes = plt.subplots(3, 3, figsize=(20, 15))
     axes = axes.flatten()
 
     for i, state in enumerate(states):
-        state_data = df[df['States'] == state]
-        ax1, ax2 = axes[i], axes[i].twinx()
+        state_data = data[data['States'] == state]
+        ax1 = axes[i]
+        ax2 = ax1.twinx()
 
         plot_stacked_area(ax1, ax2, state_data)
         configure_axes(ax1, ax2, f'{state} Electricity Generation Mix')
 
-    # Hide unused subplots
     for j in range(len(states), len(axes)):
         fig.delaxes(axes[j])
 
@@ -95,6 +91,5 @@ def plot_all_states_electricity_mix(input_path, csv_filename):
     plt.show()
 
 # Example usage
-# Replace `input_PATH` and `CSV_FILENAME` with actual paths
-# plot_state_electricity_mix(input_PATH, CSV_FILENAME, 'TAS')
-# plot_all_states_electricity_mix(input_PATH, CSV_FILENAME)
+plot_state_electricity_mix('TAS')
+plot_all_states_electricity_mix()
