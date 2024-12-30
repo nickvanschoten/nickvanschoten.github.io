@@ -1,77 +1,131 @@
-# Load necessary libraries
-if (!requireNamespace("randomForest", quietly = TRUE)) install.packages("randomForest")
-if (!requireNamespace("caret", quietly = TRUE)) install.packages("caret")
-if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
+# Load and install required libraries
+if (!requireNamespace("xgboost", quietly = TRUE)) install.packages("xgboost", dependencies = TRUE)
+if (!requireNamespace("data.table", quietly = TRUE)) install.packages("data.table", dependencies = TRUE)
+if (!requireNamespace("lubridate", quietly = TRUE)) install.packages("lubridate", dependencies = TRUE)
 
-library(tidyverse)
-library(randomForest)
-library(caret)
+library(xgboost)
+library(data.table)
+library(lubridate)
 
 # Define file paths
-input_file <- "NEM_data.csv"       # Input data file
-output_file <- "Generated_Elec_Prices.csv"  # Output file for predictions
+input_file <- "Forecasting_NEM_data.csv"
+output_file <- "forecasted_ElecPrice.csv"
 
-# Load and preprocess data
-data <- read.csv(input_file, stringsAsFactors = FALSE)
+# Load the data
+data <- fread(input_file)
 
-# Convert date column to Date format
-data$date <- as.Date(data$date, format = "%d/%m/%Y")
+# Preprocess the data
+data[, date := dmy(date)]
+data[, `:=`(
+  month = month(date),
+  year = year(date),
+  quarter = quarter(date)
+)]
 
-# Fill missing electricity price values with the column median
-data$ElecPrice[is.na(data$ElecPrice)] <- median(data$ElecPrice, na.rm = TRUE)
+# Function to create lag features
+create_lag_features <- function(data, target_column, lags) {
+  for (lag in lags) {
+    data[, paste0(target_column, "_lag", lag) := shift(get(target_column), n = lag)]
+  }
+}
 
-# Split data into historical and future datasets
-historical_data <- data %>% filter(date <= as.Date("2024-07-01"))
-future_data <- data %>% filter(date > as.Date("2024-07-01"))
+# Create lag features for electricity price
+lag_range <- 1:12  # 12 lag features for past year
+create_lag_features(data, "ElecPrice", lag_range)
 
-# Select features and target variable for modeling
-features <- historical_data %>% select(TotGen, REShare, ElecTranGDP)
-target <- historical_data$ElecPrice
+# Remove rows with missing values (due to lag creation)
+data <- na.omit(data)
 
-# Create training and testing sets
-set.seed(42)  # Ensure reproducibility
-train_index <- createDataPartition(target, p = 0.8, list = FALSE)
-X_train <- features[train_index, ]
-y_train <- target[train_index]
+# Split into training data
+train_data <- data[date < ymd("2024-07-01")]
 
-# Train a Random Forest model
-rf_model <- randomForest(x = X_train, y = y_train, ntree = 1000, importance = TRUE)
+# Create features and target variable
+train_features <- train_data[, .(
+  TotGen, Lignite, Coal, GenBiogas, GenDistil, GenGasSte, GenCCGT, GenOCGT,
+  GenRECI, GenCoaGas, GenHyd, GenWind, GenLSPV, GenRTPV, month, year, quarter,
+  ElecPrice_lag1, ElecPrice_lag2, ElecPrice_lag3, ElecPrice_lag4, ElecPrice_lag5,
+  ElecPrice_lag6, ElecPrice_lag7, ElecPrice_lag8, ElecPrice_lag9, ElecPrice_lag10,
+  ElecPrice_lag11, ElecPrice_lag12
+)]
+train_target <- train_data$ElecPrice
 
-# Predict future electricity prices
-future_features <- future_data %>% select(TotGen, REShare, ElecTranGDP)
-future_predictions <- predict(rf_model, future_features)
+# Convert data to xgboost matrix
+train_matrix <- xgb.DMatrix(data = as.matrix(train_features), label = train_target)
 
-# Add stochasticity to predictions based on historical variability
-elecprice_sd <- sd(historical_data$ElecPrice, na.rm = TRUE)
-elecprice_mean <- mean(historical_data$ElecPrice, na.rm = TRUE)
-cv <- elecprice_sd / elecprice_mean  # Coefficient of variation
-noise_sd <- cv * elecprice_mean      # Define noise level
-future_predictions_stochastic <- future_predictions + rnorm(length(future_predictions), mean = 0, sd = noise_sd)
-
-# Update future data with stochastic predictions
-future_data <- future_data %>% mutate(ElecPrice = future_predictions_stochastic)
-
-# Combine historical and future data
-combined_data <- bind_rows(
-  historical_data %>% select(date, ElecPrice, TotGen, REShare, ElecTranGDP) %>% mutate(type = "Historical"),
-  future_data %>% select(date, ElecPrice, TotGen, REShare, ElecTranGDP) %>% mutate(type = "Future")
+# Define XGBoost parameters
+xgb_params <- list(
+  booster = "gbtree",
+  objective = "reg:squarederror",
+  eta = 0.05,
+  max_depth = 10,
+  subsample = 0.8,
+  colsample_bytree = 0.8
 )
 
-# Save the combined dataset
-write.csv(combined_data, output_file, row.names = FALSE)
-cat("Combined data saved to:", output_file, "\n")
+# Train the model
+xgb_model <- xgb.train(
+  params = xgb_params,
+  data = train_matrix,
+  nrounds = 500,
+  watchlist = list(train = train_matrix),
+  print_every_n = 10
+)
 
-# Visualize electricity price trends
-ggplot(combined_data, aes(x = date, y = ElecPrice, color = type)) +
-  geom_line(size = 1) +
-  scale_color_manual(values = c("Historical" = "blue", "Future" = "red")) +
-  labs(
-    title = "Electricity Price Trends (Historical vs. Future)",
-    x = "Date",
-    y = "Electricity Price",
-    color = "Data Type"
-  ) +
-  theme_minimal()
+# Prepare future data for prediction
+future_dates <- seq.Date(from = ymd("2024-07-01"), to = ymd("2050-12-31"), by = "month")
+future_data <- data.table(date = future_dates)
+future_data[, `:=`(month = month(date), year = year(date), quarter = quarter(date))]
 
-# Display variable importance from the Random Forest model
-varImpPlot(rf_model)
+# Populate future generation values with historical averages
+avg_gen_values <- train_data[, lapply(.SD, mean), .SDcols = c(
+  "TotGen", "Lignite", "Coal", "GenBiogas", "GenDistil", "GenGasSte", "GenCCGT",
+  "GenOCGT", "GenRECI", "GenCoaGas", "GenHyd", "GenWind", "GenLSPV", "GenRTPV"
+)]
+future_data <- cbind(future_data, avg_gen_values)
+
+# Create placeholders for lag features
+for (lag in lag_range) {
+  future_data[, paste0("ElecPrice_lag", lag) := NA]
+}
+
+# Function to iteratively update lag features and predict
+update_lags <- function(data, lags) {
+  for (lag in seq_along(lags)) {
+    data[, paste0("ElecPrice_lag", lag) := shift(ElecPrice, n = lag, type = "lag")]
+  }
+  return(data)
+}
+
+# Forecast future electricity prices
+all_forecasts <- list()
+for (i in seq_len(nrow(future_data))) {
+  # Prepare features for prediction
+  current_features <- future_data[i, .(
+    TotGen, Lignite, Coal, GenBiogas, GenDistil, GenGasSte, GenCCGT, GenOCGT,
+    GenRECI, GenCoaGas, GenHyd, GenWind, GenLSPV, GenRTPV, month, year, quarter,
+    ElecPrice_lag1, ElecPrice_lag2, ElecPrice_lag3, ElecPrice_lag4, ElecPrice_lag5,
+    ElecPrice_lag6, ElecPrice_lag7, ElecPrice_lag8, ElecPrice_lag9, ElecPrice_lag10,
+    ElecPrice_lag11, ElecPrice_lag12
+  )]
+  current_matrix <- xgb.DMatrix(data = as.matrix(current_features))
+  
+  # Generate prediction
+  prediction <- predict(xgb_model, current_matrix)
+  future_data[i, ElecPrice := prediction]
+  
+  # Update lag features
+  future_data <- update_lags(future_data, lag_range)
+  
+  # Store forecast
+  all_forecasts[[i]] <- future_data[i, .(date, ElecPrice)]
+}
+
+# Combine all forecasts into a single dataset
+future_forecast <- rbindlist(all_forecasts)
+
+# Save the forecasted data
+fwrite(future_forecast, output_file)
+cat("Forecasted electricity prices saved to:", output_file, "\n")
+
+# Print the forecasted data (for review)
+print(future_forecast)
