@@ -1,0 +1,77 @@
+# Load necessary libraries
+if (!requireNamespace("randomForest", quietly = TRUE)) install.packages("randomForest")
+if (!requireNamespace("caret", quietly = TRUE)) install.packages("caret")
+if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
+
+library(tidyverse)
+library(randomForest)
+library(caret)
+
+# Define file paths
+input_file <- "NEM_data.csv"       # Input data file
+output_file <- "Generated_Elec_Prices.csv"  # Output file for predictions
+
+# Load and preprocess data
+data <- read.csv(input_file, stringsAsFactors = FALSE)
+
+# Convert date column to Date format
+data$date <- as.Date(data$date, format = "%d/%m/%Y")
+
+# Fill missing electricity price values with the column median
+data$ElecPrice[is.na(data$ElecPrice)] <- median(data$ElecPrice, na.rm = TRUE)
+
+# Split data into historical and future datasets
+historical_data <- data %>% filter(date <= as.Date("2024-07-01"))
+future_data <- data %>% filter(date > as.Date("2024-07-01"))
+
+# Select features and target variable for modeling
+features <- historical_data %>% select(TotGen, REShare, ElecTranGDP)
+target <- historical_data$ElecPrice
+
+# Create training and testing sets
+set.seed(42)  # Ensure reproducibility
+train_index <- createDataPartition(target, p = 0.8, list = FALSE)
+X_train <- features[train_index, ]
+y_train <- target[train_index]
+
+# Train a Random Forest model
+rf_model <- randomForest(x = X_train, y = y_train, ntree = 1000, importance = TRUE)
+
+# Predict future electricity prices
+future_features <- future_data %>% select(TotGen, REShare, ElecTranGDP)
+future_predictions <- predict(rf_model, future_features)
+
+# Add stochasticity to predictions based on historical variability
+elecprice_sd <- sd(historical_data$ElecPrice, na.rm = TRUE)
+elecprice_mean <- mean(historical_data$ElecPrice, na.rm = TRUE)
+cv <- elecprice_sd / elecprice_mean  # Coefficient of variation
+noise_sd <- cv * elecprice_mean      # Define noise level
+future_predictions_stochastic <- future_predictions + rnorm(length(future_predictions), mean = 0, sd = noise_sd)
+
+# Update future data with stochastic predictions
+future_data <- future_data %>% mutate(ElecPrice = future_predictions_stochastic)
+
+# Combine historical and future data
+combined_data <- bind_rows(
+  historical_data %>% select(date, ElecPrice, TotGen, REShare, ElecTranGDP) %>% mutate(type = "Historical"),
+  future_data %>% select(date, ElecPrice, TotGen, REShare, ElecTranGDP) %>% mutate(type = "Future")
+)
+
+# Save the combined dataset
+write.csv(combined_data, output_file, row.names = FALSE)
+cat("Combined data saved to:", output_file, "\n")
+
+# Visualize electricity price trends
+ggplot(combined_data, aes(x = date, y = ElecPrice, color = type)) +
+  geom_line(size = 1) +
+  scale_color_manual(values = c("Historical" = "blue", "Future" = "red")) +
+  labs(
+    title = "Electricity Price Trends (Historical vs. Future)",
+    x = "Date",
+    y = "Electricity Price",
+    color = "Data Type"
+  ) +
+  theme_minimal()
+
+# Display variable importance from the Random Forest model
+varImpPlot(rf_model)
