@@ -33,7 +33,7 @@ Key Contributions:
 ### **3. "Renovation Pathways" Australian Residential Housing Renovation Analysis**
 Visualisation of renovation economic analysis data 
 Key Features:
-- Interactive Shiny application visualising marginal abatement costs for different residential renovations in Australia. Can be easily split by state and housing type [House, Townhouse, Appartment] according to user preferences. Other outputs developed and visualised include: cost-benefit box and whisker plots, net present value column charts, and average energy bill savings bar charts. 
+- Interactive Shiny application visualising marginal abatement costs for different residential renovations in Australia. Can be easily split by state, upgrade type ['Quick-fix'; 'Modest'; 'Climate-ready'] and housing type ['House', 'Townhouse', 'Appartment'] according to user preferences. Other outputs developed and visualised include: cost-benefit box and whisker plots, net present value column charts, and average energy bill savings bar charts. 
 - These outputs were used in the publication of Climateworks Centre's ['Climate-ready homes: Building the case for a renovation wave in Australia'](https://www.climateworkscentre.org/resource/climate-ready-homes-building-the-case-for-a-renovation-wave-in-australia/) report
 
 🔗 [MACC Shiny application](https://github.com/schotsy/schotsy.github.io/blob/main/MACC%20renovation%20analysis)
