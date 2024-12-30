@@ -6,7 +6,7 @@ This portfolio houses a collection of some Python and R scripts I have developed
 
 ## 📂 Featured Projects
 
-### **1. AusTIMES: Data Processing and Visualisation for Energy and Emissions Pathways Analysis**
+### **1. AusTIMES data processing and visualisation**
 A Python-based tool to calculate energy use by fuel across ANZSIC subsectors, normalise emissions baselines, and streamline scenario processing.  
 Key Features:
 - Automates energy use data processing for multiple scenarios.
