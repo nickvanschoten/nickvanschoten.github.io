@@ -48,6 +48,8 @@ This small script pulls data about Australian Football League players from 'aflt
 
 🔗 [Interactive AFL Player stats puller](https://github.com/schotsy/schotsy.github.io/blob/main/interactive%20AFL%20stats%20puller)
 
+![image](https://github.com/user-attachments/assets/0df2a294-223e-4098-a456-c824244145de)
+
 ---
 ### **2. Officiating bias in Australian Rules Football: A statistical analysis** 🏉
 Pet project study that studies the drivers of free kick (penalty) data in the AFL between the 2012-2019 seasons. This baseline data is used to compare with the crowdless, 'unprecedented' 2020 AFL season to uncover whether the 'noise of affirmation' affects officiating quality in the AFL.
