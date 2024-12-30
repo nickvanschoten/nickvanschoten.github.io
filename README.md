@@ -1,4 +1,4 @@
-# Code Portfolio 🌏
+# Nicholas van Schoten: Code Portfolio 🌏
 
 This portfolio houses a collection of some Python and R scripts I have developed to facilitate my research at Climateworks Centre. These scripts primarily serve to streamline our energy systems and land use optimisation modelling to aid our research into understanding the complexities associated with a nature-positive, energy transition in Australia.
 
