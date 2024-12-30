@@ -1,0 +1,106 @@
+# Load necessary libraries
+library(fitzRoy)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(shiny)
+
+# Fetch player stats from AFL Tables
+fetch_and_prepare_data <- function(seasons = 2010:2024) {
+  fetch_player_stats_afltables(season = seasons)
+}
+
+# Shiny UI
+ui <- fluidPage(
+  titlePanel("AFL Player Stats Analysis"),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("season_range", "Select Season Range:", min = 2010, max = 2024, value = c(2010, 2024)),
+      selectInput("team", "Select Team:", choices = NULL),
+      selectInput("player", "Select Player:", choices = NULL),
+      selectInput("opponent", "Select Opponent Team:", choices = NULL),
+      numericInput("goals_min", "Minimum Goals:", value = 1)
+    ),
+    mainPanel(
+      verbatimTextOutput("statistics")
+    )
+  )
+)
+
+# Shiny Server
+server <- function(input, output, session) {
+  # Reactive value that holds the match data
+  match_data <- reactive({
+    fetch_and_prepare_data(seq(input$season_range[1], input$season_range[2]))
+  })
+
+  # Updates list of teams based on match data
+  observe({
+    teams <- sort(unique(c(match_data()$Home.team, match_data()$Away.team)))
+    updateSelectInput(session, "team", choices = teams, selected = teams[1])
+  })
+
+  # Update the list of players based on selected team
+  observeEvent(input$team, {
+    players <- match_data() %>%
+      filter(Playing.for == input$team) %>%
+      distinct(First.name, Surname) %>%
+      mutate(player_name = paste(First.name, Surname)) %>%
+      pull(player_name)
+    updateSelectInput(session, "player", choices = sort(players))
+  })
+
+  # Update the list of opponents based on selected team
+  observeEvent(input$team, {
+    opponents <- match_data() %>%
+      filter(Home.team == input$team | Away.team == input$team) %>%
+      distinct(c(Home.team, Away.team)) %>%
+      filter(Home.team != input$team | Away.team != input$team) %>%
+      unlist() %>%
+      unique()
+    updateSelectInput(session, "opponent", choices = sort(opponents))
+  })
+
+  # Render statistics based on user inputs
+  output$statistics <- renderPrint({
+    # Split selected player name into first and last name
+    selected_player <- strsplit(input$player, " ")[[1]]
+    first_name <- selected_player[1]
+    last_name <- selected_player[2]
+
+    player_stats <- match_data() %>%
+      filter(
+        First.name == first_name,
+        Surname == last_name,
+        Playing.for == input$team,
+        Goals >= input$goals_min,
+        (Home.team == input$opponent | Away.team == input$opponent)
+      ) %>%
+      mutate(
+        win = ifelse((Playing.for == Home.team & Home.score > Away.score) | 
+                     (Playing.for == Away.team & Away.score > Home.score), 1, 0),
+        margin = ifelse(Playing.for == Home.team, Home.score - Away.score, Away.score - Home.score)
+      )
+
+    # Calculate statistics
+    win_percentage <- player_stats %>%
+      summarise(win_percent = sum(win) / n() * 100)
+
+    average_winning_margin <- player_stats %>%
+      filter(win == 1) %>%
+      summarise(avg_winning_margin = mean(margin))
+
+    average_losing_margin <- player_stats %>%
+      filter(win == 0) %>%
+      summarise(avg_losing_margin = mean(abs(margin)))
+
+    list(
+      "Win Percentage" = win_percentage,
+      "Average Winning Margin" = average_winning_margin,
+      "Average Losing Margin" = average_losing_margin
+    )
+  })
+}
+
+# Run the Shiny App
+shinyApp(ui = ui, server = server)
