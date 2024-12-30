@@ -1,0 +1,74 @@
+# Load necessary libraries
+library(plm)
+library(ggplot2)
+library(scales)
+library(stargazer)
+library(texreg)
+
+# Load data
+df <- read.csv("FreeKickDensity.csv", header = TRUE)
+paneldf <- read.csv("AFLPanel2012.csv", header = TRUE)
+
+# Preview data
+head(df)
+head(paneldf)
+
+# Regression Models
+# Model 1: OLS Free Kicks ~ General Factors
+model_free_kicks <- list(
+  random_full = plm(Free.Kicks ~ Contested.Possessions + Crowd.Avg + Kicks + Handballs + KickRate + Kick.Rate + Wins + KickTeam + Vic + State, data = paneldf, model = "random"),
+  within_full = plm(Free.Kicks ~ Contested.Possessions + Crowd.Avg + Kicks + Handballs + KickRate + Kick.Rate + Wins + KickTeam + Vic + State, data = paneldf, model = "within"),
+  random_reduced = plm(Free.Kicks ~ Contested.Possessions + Kicks + Kick.Rate + Wins, data = paneldf, model = "random"),
+  within_reduced = plm(Free.Kicks ~ Contested.Possessions + Kicks + Kick.Rate + Wins, data = paneldf, model = "within")
+)
+
+# Display summaries
+lapply(model_free_kicks, summary)
+
+# Model 2: Crowd ~ Wins
+model_crowd <- list(
+  random = plm(Crowd.Avg ~ Wins, data = paneldf, model = "random"),
+  within = plm(Crowd.Avg ~ Wins, data = paneldf, model = "within")
+)
+
+lapply(model_crowd, summary)
+
+# Model 3: Home Free Kick Differential ~ General Factors
+model_home_fk <- list(
+  random_simple = plm(FreeHomePercent ~ KickRate + State + Vic, data = paneldf, model = "random"),
+  random_with_crowd = plm(FreeHomePercent ~ Crowd.Avg + KickRate + State + Vic, data = paneldf, model = "random"),
+  within = plm(FreeHomePercent ~ Crowd.Avg + KickRate, data = paneldf, model = "within")
+)
+
+lapply(model_home_fk, summary)
+
+# Histograms
+histogram_overlay <- function(df) {
+  hist(df$FreeHomePercent, breaks = 20, col = rgb(0, 0, 1, 1 / 4), xlim = c(60, 160), ylim = c(0, 35), main = "Histogram of Home and Away Free Kick Percentages", xlab = "Free Kick Differential Percentage")
+  hist(df$FreeAwayPercent, breaks = 20, col = rgb(1, 0, 0, 1 / 4), add = TRUE)
+}
+
+histogram_overlay(paneldf)
+
+# Density Plot
+plot_density <- function(df, column, color, main_title) {
+  hist_data <- hist(df[[column]], breaks = 12, col = color, ylim = c(0, 35), xlim = c(60, 160), main = main_title, xlab = "Percentage")
+  x_fit <- seq(min(df[[column]]), max(df[[column]]), length.out = 100)
+  y_fit <- dnorm(x_fit, mean = mean(df[[column]]), sd = sd(df[[column]])) * diff(hist_data$mids[1:2]) * nrow(df)
+  lines(x_fit, y_fit, col = "blue", lwd = 2)
+}
+
+plot_density(paneldf, "FreeHomePercent", rgb(0, 0, 1, 1 / 4), "Home Free Kick Differentials")
+plot_density(paneldf, "FreeAwayPercent", rgb(1, 0, 0, 1 / 4), "Away Free Kick Differentials")
+
+# Additional Models
+additional_models <- list(
+  away_win = plm(AwayWinPercent ~ Crowd.Avg + Vic + State, data = paneldf, model = "random"),
+  home_win = plm(HomeWinPercent ~ Crowd.Avg + Vic + State, data = paneldf, model = "random"),
+  free_kick_correlation = plm(FreeHomePercent ~ FreeAwayPercent + Vic + State + Crowd.Avg, data = paneldf, model = "random")
+)
+
+lapply(additional_models, summary)
+
+# Display selected models
+stargazer(model_free_kicks$random_full, additional_models$free_kick_correlation, additional_models$away_win, type = "text", align = TRUE, digits = 8)
