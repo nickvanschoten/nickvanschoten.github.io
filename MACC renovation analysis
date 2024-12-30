@@ -1,0 +1,112 @@
+library(ggplot2)
+library(patchwork)
+library(shiny)
+library(dplyr)
+library(ggmacc)
+library(Manu)
+library(reshape2)
+library(tidyr)
+library(scales)
+
+# Load data
+ACCU_price <- 30
+rawdf <- read.csv("v10raw.csv", header = TRUE)
+archdf <- read.csv("v10archetype.csv", header = TRUE)
+archdf <- na.omit(archdf)
+rawdf <- na.omit(rawdf)
+
+# Helper function to create custom gradients between two colors
+create_custom_gradient <- function(color1, color2, n) {
+  grDevices::colorRampPalette(colors = c(color1, color2))(n)
+}
+
+# Function to map each archetype to its corresponding color
+map_archetype_to_color <- function(archetype) {
+  if (startsWith(archetype, "H")) {
+    create_custom_gradient("#d51c0b", "#c9756d", 5)
+  } else if (startsWith(archetype, "TH")) {
+    create_custom_gradient("#0067b2", "#A0FFFF", 5)
+  } else if (startsWith(archetype, "A")) {
+    create_custom_gradient("#006f53", "#cde389", 6)
+  } else {
+    "#000000"  # Default color
+  }
+}
+
+# Assign colors to each archetype
+archdf$Archetype_Color <- sapply(archdf$Archetype, map_archetype_to_color)
+unique_colors <- unique(unlist(archdf$Archetype_Color))
+color_mapping <- setNames(unique_colors, unique(archdf$Archetype))
+archdf$Archetype_Color <- color_mapping[archdf$Archetype]
+
+# Define scenario mapping
+scenario_mapping <- c(
+  "TS_Rehab" = "thermal shell (rehabilitation)",
+  "TS_Refurb" = "thermal shell (refurbishment)",
+  "TS_Renov" = "thermal shell (renovation)",
+  "APP_Rehab" = "appliance electrification (rehabilitation)",
+  "APP_Refurb" = "appliance electrification (refurbishment)",
+  "APP_Renov" = "appliance electrification (renovation)",
+  "PV_Rehab" = "photovoltaic system (rehabilitation)",
+  "PV_Refurb" = "photovoltaic system (refurbishment)",
+  "PV_Renov" = "photovoltaic system (renovation)",
+  "CAH_Rehab" = "combined all of home (rehabilitation)",
+  "CAH_Refurb" = "combined all of home (refurbishment)",
+  "CAH_Renov" = "combined all of home (renovation)",
+  "CAH_Rehab_incl_PV" = "combined all of home incl. photovoltaic system (rehabilitation)",
+  "CAH_Refurb_incl_PV" = "combined all of home incl. photovoltaic system (refurbishment)",
+  "CAH_Renov_incl_PV" = "combined all of home incl. photovoltaic system (renovation)"
+)
+
+# UI logic
+ui <- fluidPage(
+  selectInput("dwellingType", "Select Dwelling Type", choices = c("All", unique(archdf$Dwelling.Type)), selected = NULL),
+  selectInput("scenario", "Select Scenario", choices = names(scenario_mapping), selected = NULL),
+  selectInput("state", "Select State", choices = c("Australia", unique(archdf$State)), selected = NULL),
+  plotOutput("ggmaccPlot")
+)
+
+# Server logic
+server <- function(input, output) {
+  output$ggmaccPlot <- renderPlot({
+    # Inputs
+    dwellingType <- input$dwellingType
+    scenario <- input$scenario
+    state <- input$state
+    scenario_name <- scenario_mapping[scenario]
+
+    # Filter data
+    filtered_data <- archdf
+    if (dwellingType != "All") {
+      filtered_data <- filtered_data %>% filter(Dwelling.Type == dwellingType)
+    }
+    if (state != "Australia") {
+      filtered_data <- filtered_data %>% filter(State == state)
+    }
+
+    # Variable names
+    abatement_var <- paste0("Abatement_", scenario)
+    mac_var <- paste0("MAC_", scenario)
+
+    # Create plot
+    ggmacc_plot <- ggmacc(
+      filtered_data,
+      abatement = !!sym(abatement_var),
+      mac = !!sym(mac_var),
+      fill = Archetype,
+      cost_threshold = ACCU_price,
+      zero_line = TRUE,
+      threshold_line = TRUE,
+      threshold_fade = 0.4
+    ) +
+      xlab("Average yearly abatement per household (tCO2e-)") +
+      ylab("Average abatement cost (2021A$/tCO2e-)") +
+      ggtitle(paste("Marginal abatement cost curve for", scenario_name, "in", state)) +
+      scale_fill_manual(values = unique(filtered_data$Archetype_Color))
+
+    ggmacc_plot
+  })
+}
+
+# Run the app
+shinyApp(ui = ui, server = server)
