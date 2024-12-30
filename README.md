@@ -1,10 +1,10 @@
-# GitHub Portfolio 🌏
+# Virtual Workshed 🌏
 
-This portfolio houses a collection of some Python and R scripts I have developed to facilitate my research at Climateworks Centre. These scripts primarily serve to streamline our energy systems and land use optimisation modelling to aid our research into understanding the complexities associated with a nature-positive, energy transition in Australia.
+My virtual 'shed' houses a collection of some Python and R scripts I have developed during my professional and academic research. The professional scripts are primarily serve to streamline Climateworks Centre's energy systems and land use optimisation modelling in support of our research into understanding the complexities associated with a nature-positive, energy transition in Australia.
 
 ---
 
-## 📂 Featured Projects
+## 📂 Professional Projects
 
 ### **1. AusTIMES data processing and visualisation**
 A Python-based tool to calculate energy use by fuel across ANZSIC subsectors, normalise emissions baselines, and streamline scenario processing.  
@@ -37,6 +37,13 @@ Key Features:
 - These outputs were used in the publication of Climateworks Centre's ['Climate-ready homes: Building the case for a renovation wave in Australia'](https://www.climateworkscentre.org/resource/climate-ready-homes-building-the-case-for-a-renovation-wave-in-australia/) report
 
 🔗 [MACC Shiny application](https://github.com/schotsy/schotsy.github.io/blob/main/MACC%20renovation%20analysis)
+
+## Personal Projects
+### **1. AFL player stats puller**
+This small script pulls data about Australian Football League players from 'afltables' to inform various records such as win/loss rates and winning/losing margins when specific players achieve a certain feat during any given game. 
+
+## **2. Officiating bias in Australian Rules Football: A statistical analysis**
+Pet project study that studies the drivers of free kick (penalty) data in the AFL between the 2012-2019 seasons. This baseline data is used to compare with the crowdless, 'unprecedented' 2020 AFL season to uncover whether the 'noise of affirmation' affects officiating quality in the AFL.
 
 ## ✨ About Me
 
