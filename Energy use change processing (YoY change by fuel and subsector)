@@ -1,0 +1,105 @@
+from datetime import datetime
+import pytz
+import pandas as pd
+
+# Define file paths and global constants
+INPUT_PATH = ".../Inputs/"  #ADD INPUT DIRECTORY HERE
+OUTPUT_PATH = ".../Outputs/" #ADD OUTPUT DIRECTORY HERE
+INPUT_FILES = {
+    "energy_data": "EnergyData.csv",
+    "sector_inputs": "SectorInputs.csv"
+}
+BASELINE_YEAR = '2022'
+SCENARIO = 'scenario_central~0001'  # Scenario to be extracted
+ENERGY_USE_COLS = [str(year) for year in range(2022, 2051)]  # Years from 2022 to 2050
+SUBSECTOR_COLS = ['subsector', 'subsector_detail']
+COMMODITY_COL = 'fuel_type'
+
+# Get current local date and time in 'Melbourne' for labelling outputs
+def get_current_datetime():
+    tz_melbourne = pytz.timezone('Australia/Melbourne')
+    datetime_melbourne = datetime.now(tz_melbourne)
+    return datetime_melbourne.strftime("%Y-%m-%d_%H:%M")
+
+# Load and clean data
+def load_and_clean_data(file_path):
+    df = pd.read_csv(file_path)
+    df.columns = df.columns.str.strip()  # Remove leading/trailing spaces
+    return df
+
+# Calculate normalised fuel use
+def calculate_normalised_fuel_use(energy_df, subsectors, commodities, scenario):
+    energy_df = energy_df.apply(lambda s: s.lower() if isinstance(s, str) else s)  # Case insensitive matching
+    subsectors = [s.lower() for s in subsectors]
+    commodities = [c.lower() for c in commodities]
+    scenario = scenario.lower()
+
+    sums = {year: 0 for year in ENERGY_USE_COLS}
+    baseline_value = 0
+
+    for subsector in subsectors:
+        for commodity in commodities:
+            filtered_df = energy_df[
+                ((energy_df[SUBSECTOR_COLS[0]].str.lower() == subsector) |
+                 (energy_df[SUBSECTOR_COLS[1]].str.lower() == subsector)) &
+                (energy_df[COMMODITY_COL].str.lower() == commodity) &
+                (energy_df['scenario'].str.lower() == scenario)
+            ]
+            if not filtered_df.empty:
+                baseline_value += filtered_df[BASELINE_YEAR].sum()
+                for year in ENERGY_USE_COLS:
+                    sums[year] += filtered_df[year].sum()
+
+    normalised_sums = {year: (sums[year] / baseline_value if baseline_value != 0 else 0) for year in ENERGY_USE_COLS}
+    return normalised_sums, baseline_value
+
+# Process data for normalised values
+def process_normalised_data(energy_df, sector_df, scenario):
+    normalised_df = pd.DataFrame()
+
+    for idx, row in sector_df.iterrows():
+        subsectors = row[['SectorLevel1', 'SectorLevel2', 'SectorLevel3', 'SectorLevel4', 
+                          'SectorLevel5', 'SectorLevel6', 'SectorLevel7', 'SectorLevel8', 
+                          'SectorLevel9', 'SectorLevel10', 'SectorLevel11']].dropna().tolist()
+        commodities = row[['Commodity1', 'Commodity2', 'Commodity3']].dropna().tolist()
+
+        if subsectors and commodities:
+            normalised_sums, baseline_value = calculate_normalised_fuel_use(energy_df, subsectors, commodities, scenario)
+            norm_df = pd.DataFrame([{
+                'idx': idx,
+                **normalised_sums,
+                '2022 Baseline': baseline_value
+            }])
+            normalised_df = pd.concat([normalised_df, norm_df], ignore_index=True)
+    
+    return normalised_df
+
+# Merge normalised data into original DataFrame
+def merge_normalised_data(sector_df, normalised_df):
+    for idx, row in sector_df.iterrows():
+        matched_row = normalised_df[normalised_df['idx'] == idx]
+        if not matched_row.empty:
+            for year in ENERGY_USE_COLS:
+                sector_df.at[idx, year] = matched_row[year].values[0]
+            sector_df.at[idx, '2022 Baseline'] = matched_row['2022 Baseline'].values[0]
+    return sector_df
+
+# Save the processed DataFrame
+def save_processed_data(df, filename):
+    output_file = f"{OUTPUT_PATH}{filename.split('.')[0]}_001_{get_current_datetime()}.csv"
+    df.to_csv(output_file, index=False)
+    print(f"Processed data saved to {output_file}")
+
+# Main processing workflow
+def main():
+    energy_data_df = load_and_clean_data(INPUT_PATH + INPUT_FILES['energy_data'])
+    sector_inputs_df = load_and_clean_data(INPUT_PATH + INPUT_FILES['sector_inputs'])
+
+    filtered_energy_data_df = energy_data_df[energy_data_df[ENERGY_USE_COLS].sum(axis=1) > 2]
+    normalised_data = process_normalised_data(filtered_energy_data_df, sector_inputs_df, SCENARIO)
+    updated_sector_df = merge_normalised_data(sector_inputs_df, normalised_data)
+    save_processed_data(updated_sector_df, INPUT_FILES['sector_inputs'])
+
+# Run the script
+if __name__ == "__main__":
+    main()
