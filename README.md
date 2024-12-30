@@ -37,6 +37,7 @@ Key Features:
 - These outputs were used in the publication of Climateworks Centre's ['Climate-ready homes: Building the case for a renovation wave in Australia'](https://www.climateworkscentre.org/resource/climate-ready-homes-building-the-case-for-a-renovation-wave-in-australia/) report
 
 🔗 [MACC Shiny application](https://github.com/schotsy/schotsy.github.io/blob/main/MACC%20renovation%20analysis)
+![image](https://github.com/user-attachments/assets/1f5e7a67-c0c7-4cb3-a42f-741e16492c6d)
 
 ---
 ## 📁 Personal Projects
@@ -51,6 +52,9 @@ This small script pulls data about Australian Football League players from 'aflt
 Pet project study that studies the drivers of free kick (penalty) data in the AFL between the 2012-2019 seasons. This baseline data is used to compare with the crowdless, 'unprecedented' 2020 AFL season to uncover whether the 'noise of affirmation' affects officiating quality in the AFL.
 
 [Officiating bias study](https://github.com/land-use-trade-offs/luto-2.0)
+![image](https://github.com/user-attachments/assets/82f29615-d3c5-4077-8cee-d6f2208fa4eb)
+![image](https://github.com/user-attachments/assets/813669a0-5531-4b2a-b224-8c3e8b97cf8a)
+![image](https://github.com/user-attachments/assets/be22f640-67cb-4739-854c-914c521579c8)
 
 ---
 ## ✨ About Me
