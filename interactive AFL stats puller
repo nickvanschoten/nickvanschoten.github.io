@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(patchwork)
 library(shiny)
+library(tidyr)
 
 # Fetch player stats from AFL Tables
 fetch_and_prepare_data <- function(seasons = 2010:2024) {
@@ -18,8 +19,9 @@ ui <- fluidPage(
       sliderInput("season_range", "Select Season Range:", min = 2010, max = 2024, value = c(2010, 2024)),
       selectInput("team", "Select Team:", choices = NULL),
       selectInput("player", "Select Player:", choices = NULL),
-      selectInput("opponent", "Select Opponent Team:", choices = NULL),
-      numericInput("goals_min", "Minimum Goals:", value = 1)
+      selectInput("opponent", "Select Opponent Team:", choices = c("All Teams")),
+      numericInput("goals_min", "Minimum Goals:", value = 1),
+      numericInput("disposals_min", "Minimum Disposals:", value = 0)
     ),
     mainPanel(
       verbatimTextOutput("statistics")
@@ -33,13 +35,13 @@ server <- function(input, output, session) {
   match_data <- reactive({
     fetch_and_prepare_data(seq(input$season_range[1], input$season_range[2]))
   })
-
+  
   # Updates list of teams based on match data
   observe({
     teams <- sort(unique(c(match_data()$Home.team, match_data()$Away.team)))
     updateSelectInput(session, "team", choices = teams, selected = teams[1])
   })
-
+  
   # Update the list of players based on selected team
   observeEvent(input$team, {
     players <- match_data() %>%
@@ -49,56 +51,75 @@ server <- function(input, output, session) {
       pull(player_name)
     updateSelectInput(session, "player", choices = sort(players))
   })
-
+  
   # Update the list of opponents based on selected team
   observeEvent(input$team, {
     opponents <- match_data() %>%
       filter(Home.team == input$team | Away.team == input$team) %>%
-      distinct(c(Home.team, Away.team)) %>%
-      filter(Home.team != input$team | Away.team != input$team) %>%
-      unlist() %>%
+      distinct(Home.team, Away.team) %>%
+      pivot_longer(cols = everything(), values_to = "team") %>%
+      filter(team != input$team) %>%
+      pull(team) %>%
       unique()
-    updateSelectInput(session, "opponent", choices = sort(opponents))
+    updateSelectInput(session, "opponent", choices = c("All Teams", sort(opponents)))
   })
-
+  
   # Render statistics based on user inputs
   output$statistics <- renderPrint({
+    req(match_data())  # Ensure data is available
+    req(input$player, input$team)  # Ensure all inputs are available
+    
     # Split selected player name into first and last name
     selected_player <- strsplit(input$player, " ")[[1]]
     first_name <- selected_player[1]
     last_name <- selected_player[2]
-
+    
+    # Filter data based on user inputs
     player_stats <- match_data() %>%
       filter(
         First.name == first_name,
         Surname == last_name,
         Playing.for == input$team,
         Goals >= input$goals_min,
-        (Home.team == input$opponent | Away.team == input$opponent)
-      ) %>%
+        Disposals >= input$disposals_min  # Filter by minimum disposals
+      )
+    
+    if (input$opponent != "All Teams") {
+      player_stats <- player_stats %>%
+        filter(Home.team == input$opponent | Away.team == input$opponent)
+    }
+    
+    player_stats <- player_stats %>%
       mutate(
         win = ifelse((Playing.for == Home.team & Home.score > Away.score) | 
-                     (Playing.for == Away.team & Away.score > Home.score), 1, 0),
+                       (Playing.for == Away.team & Away.score > Home.score), 1, 0),
         margin = ifelse(Playing.for == Home.team, Home.score - Away.score, Away.score - Home.score)
       )
-
+    
     # Calculate statistics
     win_percentage <- player_stats %>%
-      summarise(win_percent = sum(win) / n() * 100)
-
+      summarise(win_percent = sum(win) / n() * 100) %>%
+      pull(win_percent) %>%
+      round(1)
+    
     average_winning_margin <- player_stats %>%
       filter(win == 1) %>%
-      summarise(avg_winning_margin = mean(margin))
-
+      summarise(avg_winning_margin = mean(margin, na.rm = TRUE)) %>%
+      pull(avg_winning_margin) %>%
+      round(1)
+    
     average_losing_margin <- player_stats %>%
       filter(win == 0) %>%
-      summarise(avg_losing_margin = mean(abs(margin)))
-
-    list(
-      "Win Percentage" = win_percentage,
-      "Average Winning Margin" = average_winning_margin,
-      "Average Losing Margin" = average_losing_margin
-    )
+      summarise(avg_losing_margin = mean(abs(margin), na.rm = TRUE)) %>%
+      pull(avg_losing_margin) %>%
+      round(1)
+    
+    # Format and return output
+    cat("Player Performance Summary:\n")
+    cat("----------------------------\n")
+    cat(sprintf("Win Percentage: %.1f%%\n", win_percentage))
+    cat(sprintf("Average Winning Margin: %.1f points\n", average_winning_margin))
+    cat(sprintf("Average Losing Margin: %.1f points\n", average_losing_margin))
   })
 }
 
