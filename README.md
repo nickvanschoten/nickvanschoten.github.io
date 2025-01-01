@@ -1,6 +1,6 @@
 # Virtual Workshed 🌏
 
-My virtual 'shed' houses a collection of some Python and R scripts I have developed during my professional and academic research. The professional scripts are primarily serve to streamline Climateworks Centre's energy systems and land use optimisation modelling in support of our research into understanding the complexities associated with a nature-positive, energy transition in Australia.
+My virtual shed houses a collection of some Python and R scripts I have developed during my professional, academic and personal research. The professional scripts primarily serve to streamline Climateworks Centre's energy systems and land use optimisation modelling in studying the complexities of a nature-positive energy transition in Australia.
 
 ---
 
