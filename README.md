@@ -56,11 +56,11 @@ Pet project study that studies the drivers of free kick (penalty) data in the AF
 
 [Officiating bias study](https://github.com/schotsy/schotsy.github.io/blob/main/AFL%20officating%20bias%20panel%20data%20study)
 
-![image](https://github.com/user-attachments/assets/82f29615-d3c5-4077-8cee-d6f2208fa4eb)
+![image](https://github.com/user-attachments/assets/33537a3d-b34d-45f7-95db-deabc2fe5b8e)
+
+![image](https://github.com/user-attachments/assets/16aa2a08-e82c-4607-8d3e-fe19912367a5)
 
 ![image](https://github.com/user-attachments/assets/813669a0-5531-4b2a-b224-8c3e8b97cf8a)
-
-![image](https://github.com/user-attachments/assets/be22f640-67cb-4739-854c-914c521579c8)
 
 ---
 ## ✨ About Me
