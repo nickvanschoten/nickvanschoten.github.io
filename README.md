@@ -60,7 +60,8 @@ Pet project study that studies the drivers of free kick (penalty) data in the AF
 
 ![image](https://github.com/user-attachments/assets/16aa2a08-e82c-4607-8d3e-fe19912367a5)
 
-![image](https://github.com/user-attachments/assets/813669a0-5531-4b2a-b224-8c3e8b97cf8a)
+![image](https://github.com/user-attachments/assets/edd42b22-65be-4025-ae50-d1004524314a)
+
 
 ---
 ## ✨ About Me
