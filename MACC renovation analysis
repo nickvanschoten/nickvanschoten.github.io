@@ -15,13 +15,13 @@ archdf <- read.csv("v10archetype.csv", header = TRUE)
 archdf <- na.omit(archdf)
 rawdf <- na.omit(rawdf)
 
-# Helper function to create custom gradients between two colors
-create_custom_gradient <- function(color1, color2, n) {
-  grDevices::colorRampPalette(colors = c(color1, color2))(n)
+# Helper function to create custom gradients between two colours
+create_custom_gradient <- function(colour1, colour2, n) {
+  grDevices::colourRampPalette(colours = c(colour1, colour2))(n)
 }
 
-# Function to map each archetype to its corresponding color
-map_archetype_to_color <- function(archetype) {
+# Function to map each archetype to its corresponding colour
+map_archetype_to_colour <- function(archetype) {
   if (startsWith(archetype, "H")) {
     create_custom_gradient("#d51c0b", "#c9756d", 5)
   } else if (startsWith(archetype, "TH")) {
@@ -29,15 +29,15 @@ map_archetype_to_color <- function(archetype) {
   } else if (startsWith(archetype, "A")) {
     create_custom_gradient("#006f53", "#cde389", 6)
   } else {
-    "#000000"  # Default color
+    "#000000"  # Default colour
   }
 }
 
-# Assign colors to each archetype
-archdf$Archetype_Color <- sapply(archdf$Archetype, map_archetype_to_color)
-unique_colors <- unique(unlist(archdf$Archetype_Color))
-color_mapping <- setNames(unique_colors, unique(archdf$Archetype))
-archdf$Archetype_Color <- color_mapping[archdf$Archetype]
+# Assign colours to each archetype
+archdf$Archetype_colour <- sapply(archdf$Archetype, map_archetype_to_colour)
+unique_colours <- unique(unlist(archdf$Archetype_colour))
+colour_mapping <- setNames(unique_colours, unique(archdf$Archetype))
+archdf$Archetype_colour <- colour_mapping[archdf$Archetype]
 
 # Define scenario mapping
 scenario_mapping <- c(
@@ -102,7 +102,7 @@ server <- function(input, output) {
       xlab("Average yearly abatement per household (tCO2e-)") +
       ylab("Average abatement cost (2021A$/tCO2e-)") +
       ggtitle(paste("Marginal abatement cost curve for", scenario_name, "in", state)) +
-      scale_fill_manual(values = unique(filtered_data$Archetype_Color))
+      scale_fill_manual(values = unique(filtered_data$Archetype_colour))
 
     ggmacc_plot
   })
