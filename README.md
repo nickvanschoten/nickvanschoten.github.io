@@ -7,11 +7,12 @@ My virtual shed houses a collection of some Python and R scripts I have develope
 ## 📂 Professional Projects
 
 ### **1. AusTIMES data processing and visualisation** 📉
-A Python-based tool to calculate energy use by fuel across ANZSIC subsectors, normalise emissions baselines, and streamline scenario processing.  
+Python-based tools to calculate energy use by fuel across ANZSIC subsectors, normalise emissions baselines, and streamline scenario processing.  
 Key Features:
 - Automates energy use data processing for multiple scenarios.
 - Handles large datasets with flexible input paths for user-specified subsector representation.
 - Data visualisation for annual 'Electricity generation mix' split by technology and region (state).
+Also produced some price forecasts in R to inform the partial-equilibrium energy model, AusTIMES: 
 - National electricity market (NEM) Random Forest electricity price forecasting.
 
 🔗 [Energy use processing](https://github.com/schotsy/schotsy.github.io/blob/main/Energy%20use%20change%20processing%20(YoY%20change%20by%20fuel%20and%20subsector))
