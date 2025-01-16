@@ -10,7 +10,7 @@ My virtual shed houses a collection of some Python and R scripts I have develope
 Python-based tools to calculate energy use by fuel across ANZSIC subsectors, normalise emissions baselines, and streamline scenario processing.  
 Key Features:
 - Automates energy use data processing for multiple scenarios. 🔗 [Energy use processing](https://github.com/schotsy/schotsy.github.io/blob/main/Energy%20use%20change%20processing%20(YoY%20change%20by%20fuel%20and%20subsector))
-- Handles large datasets with flexible input paths for user-specified subsector representation.
+   - Handles large datasets with flexible input paths for user-specified subsector representation.
 - Data visualisation for annual '🔗 [Electricity mix plotting](https://github.com/schotsy/schotsy.github.io/blob/main/Py%20matplotlib%20'Elec%20generation%20mix'%20plotting)' split by technology and region (state).
 
 ![image](https://github.com/user-attachments/assets/0df62873-d12f-45b1-acdb-8d58c5dd2b03)
