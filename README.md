@@ -12,6 +12,9 @@ Key Features:
 - Automates energy use data processing for multiple scenarios.
 - Handles large datasets with flexible input paths for user-specified subsector representation.
 - Data visualisation for annual 'Electricity generation mix' split by technology and region (state).
+
+![image](https://github.com/user-attachments/assets/0df62873-d12f-45b1-acdb-8d58c5dd2b03)
+
 Also produced some price forecasts in R to inform the partial-equilibrium energy model, AusTIMES: 
 - National electricity market (NEM) Random Forest electricity price forecasting.
 
