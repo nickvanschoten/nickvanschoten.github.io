@@ -13,8 +13,7 @@ Key Features:
    - Handles large datasets with flexible input paths for user-specified subsector representation.
 - Data visualisation for annual '🔗 [Electricity mix plotting](https://github.com/schotsy/schotsy.github.io/blob/main/Py%20matplotlib%20'Elec%20generation%20mix'%20plotting)' split by technology and region (state).
 
-![image](https://github.com/user-attachments/assets/28739bbd-9d71-4c56-ae37-72b5bdb1ec07)
-
+![image](https://github.com/user-attachments/assets/7eb8a780-a730-49d5-9ac6-fb1480b3c0c5)
 
 Also produced some price forecasts in R to inform the partial-equilibrium energy model, AusTIMES: 
 - National electricity market (NEM) Random Forest 🔗[electricity price forecasting](https://github.com/schotsy/schotsy.github.io/blob/main/RF%20elec%20price%20forecast).
