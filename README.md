@@ -28,7 +28,7 @@ Also produced some price forecasts in R to inform the partial-equilibrium energy
 Geospatial land use optimisation model developed to create sustainable land use pathways that factor in geographical, social, environmental and climate constraints.  
 Key Contributions:
 - Development of five agricultural management solutions, enabling modelling of sustainable land management decisions and policy analysis.
-- Integration of solar PV and wind energy generation modeling (in progress).
+- Integration of solar PV and wind energy generation modelling (in progress).
 - Integration with AusTIMES energy and emissions outputs to ensure coherent pathways.
 
 🔗 [Project Repository](https://github.com/land-use-trade-offs/luto-2.0)
