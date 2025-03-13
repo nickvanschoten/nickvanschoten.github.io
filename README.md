@@ -52,7 +52,7 @@ This small script pulls data about Australian Football League players from 'aflt
 
 🔗 [Interactive AFL Player stats puller](https://github.com/schotsy/schotsy.github.io/blob/main/interactive%20AFL%20stats%20puller)
 
-![image](https://github.com/user-attachments/assets/0df2a294-223e-4098-a456-c824244145de)
+![image](https://github.com/user-attachments/assets/f39b0abb-7ca3-4584-b7bb-9f608ec1ab87)
 
 ---
 ### **2. Officiating bias in Australian Rules Football: A statistical analysis** 🏉
