@@ -118,4 +118,24 @@ server <- function(input, output, session) {
 }
 
 # Run the Shiny App
+library(shiny)
+
+ui <- fluidPage(
+  titlePanel("Parlay Maker"),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("season_range", "Select Seasons:", min = 2010, max = 2024, value = c(2010, 2024), sep = ""),
+      selectInput("team", "Select Team:", choices = NULL),
+      selectInput("player", "Select Player:", choices = NULL),
+      selectInput("opponent", "Select Opponent:", choices = NULL),
+      numericInput("goals_min", "Minimum Goals:", value = 0, min = 0),
+      numericInput("disposals_min", "Minimum Disposals:", value = 0, min = 0)
+    ),
+    mainPanel(
+      verbatimTextOutput("statistics")
+    )
+  )
+)
+
 shinyApp(ui = ui, server = server)
+
