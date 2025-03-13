@@ -1,30 +1,48 @@
-# Load necessary libraries
+library(shiny)
 library(fitzRoy)
 library(dplyr)
 library(ggplot2)
 library(patchwork)
-library(shiny)
 library(tidyr)
 
-# Fetch player stats from AFL Tables using fitzRoy R package
+# Fetch player stats from AFL Tables
 fetch_and_prepare_data <- function(seasons = 2010:2024) {
   fetch_player_stats_afltables(season = seasons)
 }
 
-# Shiny App
+# UI Layout
+ui <- fluidPage(
+  titlePanel("Parlay Maker"),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("season_range", "Select Seasons:", min = 2010, max = 2024, value = c(2010, 2024), sep = ""),
+      selectInput("team", "Select Team:", choices = NULL),
+      selectInput("player", "Select Player:", choices = NULL),
+      selectInput("opponent", "Select Opponent:", choices = NULL),
+      numericInput("goals_min", "Minimum Goals:", value = 0, min = 0),
+      numericInput("disposals_min", "Minimum Disposals:", value = 0, min = 0)
+    ),
+    mainPanel(
+      verbatimTextOutput("statistics"),
+      verbatimTextOutput("historical_prob"),
+      plotOutput("hist_plot")
+    )
+  )
+)
+
+# Server Logic
 server <- function(input, output, session) {
-  # Reactive value that holds the match data
   match_data <- reactive({
     fetch_and_prepare_data(seq(input$season_range[1], input$season_range[2]))
   })
   
-  # Updates list of teams based on match data
+  # Update team list dynamically
   observe({
     teams <- sort(unique(c(match_data()$Home.team, match_data()$Away.team)))
     updateSelectInput(session, "team", choices = teams, selected = teams[1])
   })
   
-  # Update the list of players based on selected team
+  # Update player list based on selected team
   observeEvent(input$team, {
     players <- match_data() %>%
       filter(Playing.for == input$team) %>%
@@ -34,7 +52,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "player", choices = c("All players", sort(players)))
   })
   
-  # Update the list of opponents based on selected team
+  # Update opponent list based on selected team
   observeEvent(input$team, {
     opponents <- match_data() %>%
       filter(Home.team == input$team | Away.team == input$team) %>%
@@ -46,24 +64,19 @@ server <- function(input, output, session) {
     updateSelectInput(session, "opponent", choices = c("All teams", sort(opponents)))
   })
   
-  # Render statistics based on user inputs
+  # Render performance statistics
   output$statistics <- renderPrint({
-    req(match_data())  # Ensure data is available
-    req(input$team)    # Ensure team is selected
+    req(match_data(), input$team)
     
-    # Filter data for the selected team
     team_stats <- match_data() %>%
       filter(Playing.for == input$team)
     
-    # Apply opponent filter
     if (input$opponent != "All teams") {
       team_stats <- team_stats %>%
         filter(Home.team == input$opponent | Away.team == input$opponent)
     }
     
-    # Handle "All players" case
     if (input$player != "All players") {
-      # Split selected player name into first and last name
       selected_player <- strsplit(input$player, " ")[[1]]
       first_name <- selected_player[1]
       last_name <- selected_player[2]
@@ -73,11 +86,10 @@ server <- function(input, output, session) {
           First.name == first_name,
           Surname == last_name,
           Goals >= input$goals_min,
-          Disposals >= input$disposals_min  # Filter by minimum disposals
+          Disposals >= input$disposals_min
         )
     }
     
-    # Calculate win/loss and margins
     team_stats <- team_stats %>%
       mutate(
         win = ifelse((Playing.for == Home.team & Home.score > Away.score) | 
@@ -85,7 +97,6 @@ server <- function(input, output, session) {
         margin = ifelse(Playing.for == Home.team, Home.score - Away.score, Away.score - Home.score)
       )
     
-    # Calculate statistics
     win_percentage <- team_stats %>%
       summarise(win_percent = sum(win) / n() * 100) %>%
       pull(win_percent) %>%
@@ -103,7 +114,6 @@ server <- function(input, output, session) {
       pull(avg_losing_margin) %>%
       round(1)
     
-    # Format and return output
     cat("Performance Summary:\n")
     cat("---------------------\n")
     if (input$player == "All players") {
@@ -115,27 +125,61 @@ server <- function(input, output, session) {
     cat(sprintf("Average Winning Margin: %.1f points\n", average_winning_margin))
     cat(sprintf("Average Losing Margin: %.1f points\n", average_losing_margin))
   })
+  
+  # Compute historical probability based on selected filters
+  output$historical_prob <- renderText({
+    req(match_data(), input$team)
+    
+    team_stats <- match_data() %>%
+      filter(Playing.for == input$team)
+    
+    if (input$opponent != "All teams") {
+      team_stats <- team_stats %>%
+        filter(Home.team == input$opponent | Away.team == input$opponent)
+    }
+    
+    if (input$player == "All players") {
+      # Calculate team totals
+      team_totals <- team_stats %>%
+        group_by(Date) %>%
+        summarise(TotalGoals = sum(Goals, na.rm = TRUE), TotalDisposals = sum(Disposals, na.rm = TRUE))
+      
+      prob_goals <- sum(team_totals$TotalGoals >= input$goals_min, na.rm = TRUE) / nrow(team_totals) * 100
+      prob_disposals <- sum(team_totals$TotalDisposals >= input$disposals_min, na.rm = TRUE) / nrow(team_totals) * 100
+      
+      sprintf("Historical probability of the team scoring at least %d goals: %.1f%%\nHistorical probability of the team reaching %d disposals: %.1f%%", 
+              input$goals_min, prob_goals, input$disposals_min, prob_disposals)
+      
+    } else {
+      selected_player <- strsplit(input$player, " ")[[1]]
+      first_name <- selected_player[1]
+      last_name <- selected_player[2]
+      
+      player_stats <- team_stats %>%
+        filter(First.name == first_name, Surname == last_name)
+      
+      prob_goals <- sum(player_stats$Goals >= input$goals_min, na.rm = TRUE) / nrow(player_stats) * 100
+      prob_disposals <- sum(player_stats$Disposals >= input$disposals_min, na.rm = TRUE) / nrow(player_stats) * 100
+      
+      sprintf("Historical probability of %s scoring at least %d goals: %.1f%%\nHistorical probability of %s reaching %d disposals: %.1f%%", 
+              input$player, input$goals_min, prob_goals, input$player, input$disposals_min, prob_disposals)
+    }
+  })
+  
+  # Visualization: Histogram of goals
+  output$hist_plot <- renderPlot({
+    req(match_data(), input$team)
+    
+    team_stats <- match_data() %>%
+      filter(Playing.for == input$team)
+    
+    ggplot(team_stats, aes(x = Goals)) +
+      geom_histogram(binwidth = 1, fill = "steelblue", alpha = 0.7) +
+      geom_vline(xintercept = input$goals_min, color = "red", linetype = "dashed") +
+      labs(title = "Distribution of Goals Scored", x = "Goals", y = "Frequency") +
+      theme_minimal()
+  })
 }
 
 # Run the Shiny App
-library(shiny)
-
-ui <- fluidPage(
-  titlePanel("Parlay Maker"),
-  sidebarLayout(
-    sidebarPanel(
-      sliderInput("season_range", "Select Seasons:", min = 2010, max = 2024, value = c(2010, 2024), sep = ""),
-      selectInput("team", "Select Team:", choices = NULL),
-      selectInput("player", "Select Player:", choices = NULL),
-      selectInput("opponent", "Select Opponent:", choices = NULL),
-      numericInput("goals_min", "Minimum Goals:", value = 0, min = 0),
-      numericInput("disposals_min", "Minimum Disposals:", value = 0, min = 0)
-    ),
-    mainPanel(
-      verbatimTextOutput("statistics")
-    )
-  )
-)
-
 shinyApp(ui = ui, server = server)
-
