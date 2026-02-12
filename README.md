@@ -3,6 +3,12 @@
 My virtual shed houses a collection of some Python and R scripts I have developed during my professional, academic and personal research. The professional scripts primarily serve to streamline Climateworks Centre's energy systems and land use optimisation modelling in studying the complexities of a nature-positive energy transition in Australia.
 
 ---
+## ✨ About Me
+
+I am a Senior Analyst within the Research, Analysis & Modelling team at the independent, non-profit research institute Climateworks Centre housed within the Monash Sustainable Development Institute. My research supports the development of just and sustainable pathways to meeting our various climate and environmental objectives.
+📬 [LinkedIn](https://www.linkedin.com/in/nicholas-van-schoten-21830515a/) | ✉️ Email: nicholas.vanschoten@gmail.com
+
+---
 
 ## 📂 Professional Projects
 
@@ -64,8 +70,3 @@ Pet project study that studies the drivers of free kick (penalty) data in the AF
 ![image](https://github.com/user-attachments/assets/edd42b22-65be-4025-ae50-d1004524314a)
 
 
----
-## ✨ About Me
-
-I am a Senior Analyst within the Research, Analysis & Modelling team at the independent, non-profit research institute Climateworks Centre housed within the Monash Sustainable Development Institute. My research supports the development of just and sustainable pathways to meeting our various climate and environmental objectives.
-📬 [LinkedIn](https://www.linkedin.com/in/nicholas-van-schoten-21830515a/) | ✉️ Email: nicholas.vanschoten@gmail.com
