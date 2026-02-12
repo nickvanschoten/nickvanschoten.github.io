@@ -11,15 +11,14 @@ Python-based tools to calculate energy use by fuel across ANZSIC subsectors, nor
 Key Features:
 - Automates energy use data processing for multiple scenarios. 🔗 [Energy use processing](https://github.com/schotsy/schotsy.github.io/blob/main/Energy%20use%20change%20processing%20(YoY%20change%20by%20fuel%20and%20subsector))
    - Handles large datasets with flexible input paths for user-specified subsector representation.
-- Data visualisation for annual '🔗 [Electricity mix plotting](https://github.com/user-attachments/assets/aaed6b7c-77d9-4b8c-96e6-771991140636)' split by technology and region (state).
+- Data visualisation for annual '🔗 [Electricity mix plotting](https://github.com/nickvanschoten/nickvanschoten.github.io/blob/main/Py%20matplotlib%20'Elec%20generation%20mix'%20plotting)' split by technology and region (state).
 
-![image](https://github.com/user-attachments/assets/7eb8a780-a730-49d5-9ac6-fb1480b3c0c5)
+
 
 Also produced some price forecasts in R to inform the partial-equilibrium energy model, AusTIMES: 
 - National electricity market (NEM) Random Forest 🔗[electricity price forecasting](https://github.com/schotsy/schotsy.github.io/blob/main/RF%20elec%20price%20forecast).
 
-
-
+<img width="1350" height="1170" alt="image" src="https://github.com/user-attachments/assets/d0d398c1-43be-438f-be77-821f331be8fc" />
 
 
 ---
@@ -27,9 +26,10 @@ Also produced some price forecasts in R to inform the partial-equilibrium energy
 ### **2. Land Use Trade Offs Model (LUTO2)** 🌳
 Geospatial land use optimisation model developed to create sustainable land use pathways that factor in geographical, social, environmental and climate constraints.  
 Key Contributions:
-- Development of five agricultural management solutions, enabling modelling of sustainable land management decisions and policy analysis.
-- Implementation of solar PV and wind energy generation module (in progress).
-- Integration with AusTIMES energy and emissions outputs to ensure coherent pathways.
+- Development of five agricultural management solution bundles, enabling modelling of sustainable land management decisions and policy analysis.
+- Implementation of solar PV and wind renewable energy generation module.
+- Linking with AusTIMES energy and emissions outputs to ensure internally consistent energy, land use and emissions sustainability pathways
+- Devised methodology for deriving sequestration cost curves directly from LUTO2 sensitivity analysis outputs
 
 🔗 [Project Repository](https://github.com/land-use-trade-offs/luto-2.0)
 
