@@ -1,127 +1,82 @@
+# @title Elec generation mix
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-def plot_state_electricity_mix(state):
-    file_path = input_PATH + CSV_FILENAME
-
-    # Load the data
-    df = pd.read_csv(file_path)
-
-    if state == 'AUS':
-        # Collate data for all states
-        grouped_data = df.groupby('Technology').sum(numeric_only=True)
-        state_data = grouped_data.reset_index()
-    else:
-        # Filter data for the specific state
-        state_data = df[df['States'] == state]
-
-    # Definitions
-    technologies = ['Hydro', 'Black coal', 'Brown coal', 'Natural gas', 'Oil products', 'Wind', 'Large-scale solar PV', 'Small-scale solar PV']
-    renewable_technologies = ['Hydro', 'Wind', 'Large-scale solar PV', 'Small-scale solar PV']
-    years = list(range(2022, 2051))
-
-    # Colors for each generation technology
-    colors = {
-        'Hydro': '#00b0e0',
-        'Black coal': '#000000',
-        'Brown coal': '#56200a',
-        'Natural gas': '#daaa7a',
-        'Oil products': '#3B3131',
-        'Wind': '#006f53',
-        'Large-scale solar PV': '#ffd80f',
-        'Small-scale solar PV': '#ffea7d',
+def plot_electricity_mix(state):
+    state_names = {
+        "AUS": "Australia's", "NSW": "New South Wales'", "QLD": "Queensland's", "VIC": "Victoria's",
+        "WA": "Western Australia's", "SA": "South Australia's", "ACT": "Australian Capital Territory's",
+        "NT": "Northern Territory's", "TAS": "Tasmania's"
     }
 
-    # Create the figure
-    fig, ax1 = plt.subplots(figsize=(15, 8))
-    ax2 = ax1.twinx()
+    file_path = input_PATH + CSV_FILENAME
+    df = pd.read_csv(file_path)
 
-    ax1.spines['top'].set_visible(False)
-    ax2.spines['top'].set_visible(False)
+    #if state == 'AUS':
+        #grouped_data = df.groupby('Technology').sum(numeric_only=True).reset_index()
+        #state_data = grouped_data
+    #else:
+    state_data = df[df['States'] == state]
 
-    # Stacked area plot
+    technologies = ['Hydro', 'Black coal', 'Brown coal', 'Natural gas', 'Oil products', 'Wind', 'Large-scale solar PV', 'Small-scale solar PV']
+    years = list(range(2022, 2051))
+
+    colors = {
+        'Hydro': '#00b0e0', 'Black coal': '#000000', 'Brown coal': '#56200a',
+        'Natural gas': '#daaa7a', 'Oil products': '#3B3131', 'Wind': '#006f53',
+        'Large-scale solar PV': '#f4bb2c', 'Small-scale solar PV': '#fbeabf',
+    }
+
+    output_dpi = 300
+    fig_size_inches = (1380 / output_dpi, 1200 / output_dpi)  # 3.15" x 3.15"
+    fig, ax1 = plt.subplots(figsize=fig_size_inches, dpi=output_dpi)
     bottom = np.zeros(len(years))
-    legend_handles = []  # Store legend handles for the technologies
-    total_generation = np.zeros(len(years))  # Total generation for calculating renewables %
-    renewable_generation = np.zeros(len(years))  # Renewable generation for calculating renewables %
+    total_generation = np.zeros(len(years))
+    legend_handles = []
 
     for tech in technologies:
-        # Get the data for the generation technology type
         tech_data_row = state_data[state_data['Technology'] == tech]
-
         if tech_data_row.empty:
-            continue  # Skip if no data exists for this technology
+            continue
 
-        tech_data = tech_data_row.iloc[0, 2:].values.astype(float)  # Extract year data and convert to float
+        year_columns = [str(year) for year in years]
+        tech_data = tech_data_row[year_columns].values.flatten().astype(float)
 
-        # Ensure tech_data aligns with the "years" array
-        if len(tech_data) < len(years):
-            tech_data = np.pad(tech_data, (0, len(years) - len(tech_data)), 'constant', constant_values=0)
-        elif len(tech_data) > len(years):
-            tech_data = tech_data[:len(years)]
+        if tech != 'Firming':
+            total_generation += tech_data
 
-        # Add to total generation and renewable generation
-        total_generation += tech_data
-        if tech in renewable_technologies:
-            renewable_generation += tech_data
-
-        # Plot data
         if np.any(tech_data > 0):
-            pre_2025 = tech_data[:3]  # Historical (2022-2024)
-            post_2024 = tech_data[3:]  # Modelled (2025 onwards)
+            pre_2025 = tech_data[:3]
+            post_2024 = tech_data[3:]
 
-            # Historical period
-            ax1.fill_between(years[:3], bottom[:3], bottom[:3] + pre_2025,
-                             facecolor=colors.get(tech, '#808080'),
-                             alpha=0.7)  # Slightly transparent
-
-            # Combine 2024 and 2025 for continuity
+            ax1.fill_between(years[:3], bottom[:3], bottom[:3] + pre_2025, facecolor=colors.get(tech, '#808080'), alpha=0.7)
             combined_bottom = np.concatenate((bottom[2:3], bottom[3:]))
             combined_data = np.concatenate((pre_2025[-1:], post_2024))
+            ax1.fill_between(years[2:], combined_bottom, combined_bottom + combined_data, facecolor=colors.get(tech, '#808080'))
 
-            # Modelled period (2025+)
-            ax1.fill_between(years[2:], combined_bottom, combined_bottom + combined_data,
-                             facecolor=colors.get(tech, '#808080'))
-
-            # Update the bottom for stacking
             bottom += tech_data
+            legend_handles.append(plt.Line2D([0], [0], color=colors.get(tech, '#808080'), lw=4, label=tech))
 
-            # Add legend handle for the current technology
-            legend_handles.append(
-                plt.Line2D([0], [0], color=colors.get(tech, '#808080'), lw=4, label=tech)
-            )
-
-    # Add a semi-transparent gray overlay for the historical period
+    y_position = ax1.get_ylim()[0] - (ax1.get_ylim()[1] * 0.05)
+    #ax1.text(2023, y_position, 'Historical', fontsize=6, color='black', ha='center', va='center')
+    #ax1.text(2038, y_position, 'Modelled', fontsize=6, color='black', ha='center', va='center')
     ax1.axvspan(2022, 2024, color='gray', alpha=0.1)
-
-    # Add a vertical dashed line to separate historical and modelled data
     ax1.axvline(x=2024, color='black', linestyle=':', linewidth=1)
+    ax1.set_ylim(0, np.max(total_generation) * 1.1)
+    ax1.set_xlim(min(years), max(years))
+    ax1.tick_params(axis='x', labelsize=6)  # <-- ticker size
+    ax1.tick_params(axis='y', labelsize=6)  # <-- ticker size
+    #ax1.set_title(f"{state_names[state]} electricity generation mix in Climateworks' 1.5°C-aligned scenario", fontstyle='italic', weight='bold', fontsize=14)
+    ax1.set_ylabel('Electricity generation (TWh)', weight='bold', fontsize=6)
+    #ax1.legend(handles=legend_handles, loc='upper left', bbox_to_anchor=(1.05, 1),fontsize=14)
 
-    # Calculate renewables percentage
-    renewables_percentage = (renewable_generation / total_generation) * 100
-
-    # Renewables percentage line
-    renewables_line, = ax2.plot(years, renewables_percentage, ':', color='orange', label='Renewables %')
-
-    # Add subtitles for 'Historical' and 'Modelled' above the X-axis
-    y_position = ax1.get_ylim()[0] - (ax1.get_ylim()[1] * -0.025)  # Slightly above the X-axis, Y-lim automatically adjusts the placement according to size of axis
-    ax1.text(2023, y_position, 'Historical', fontsize=8, color='black', ha='center', va='center')
-    ax1.text(2038, y_position, 'Modelled', fontsize=8, color='black', ha='center', va='center')
-
-    # Customize the plot
-    ax1.set_title(f'{state} Electricity Generation Mix', fontsize=14)
-    ax1.set_xlabel('Year')
-    ax1.set_ylabel('Electricity Generation (TWh)')
-    ax2.set_ylabel('Renewables Percentage (%)')
-    ax2.set_ylim(0, 100)
-
-    # Combine legends for technologies and renewables percentage
-    ax1.legend(handles=legend_handles + [renewables_line], loc='upper left', bbox_to_anchor=(1.05, 1))
+    # Set y-axis limit for electricity generation
+    ax1.set_ylim(bottom=0, top=np.max(bottom) * 1.05)
 
     plt.tight_layout()
     plt.show()
 
-# Example usage
-plot_state_electricity_mix('AUS')  # National data
-plot_state_electricity_mix('VIC') # Change state here
+for state in ['AUS', 'ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']:
+    plot_electricity_mix(state)
