@@ -13,7 +13,7 @@ Key Features:
    - Handles large datasets with flexible input paths for user-specified subsector representation.
 - Data visualisation for annual '🔗 [Electricity mix plotting](https://github.com/nickvanschoten/nickvanschoten.github.io/blob/main/Py%20matplotlib%20'Elec%20generation%20mix'%20plotting)' split by technology and region (state).
 
-<img width="1350" height="1170" alt="image" src="https://github.com/user-attachments/assets/d0d398c1-43be-438f-be77-821f331be8fc" />
+<img width="1045" height="654" alt="image" src="https://github.com/user-attachments/assets/f2e5e8e4-7ca3-49f9-a210-41b233b908d8" />
 
 Random Forest modelling (R) forecasting NEM electricity prices given changes in energy use across the economy: 
 - National electricity market (NEM) Random Forest 🔗[electricity price forecasting](https://github.com/schotsy/schotsy.github.io/blob/main/RF%20elec%20price%20forecast).
