@@ -11,7 +11,7 @@ Python-based tools to calculate energy use by fuel across ANZSIC subsectors, nor
 Key Features:
 - Automates energy use data processing for multiple scenarios. 🔗 [Energy use processing](https://github.com/schotsy/schotsy.github.io/blob/main/Energy%20use%20change%20processing%20(YoY%20change%20by%20fuel%20and%20subsector))
    - Handles large datasets with flexible input paths for user-specified subsector representation.
-- Data visualisation for annual '🔗 [Electricity mix plotting](https://github.com/schotsy/schotsy.github.io/blob/main/Py%20matplotlib%20'Elec%20generation%20mix'%20plotting)' split by technology and region (state).
+- Data visualisation for annual '🔗 [Electricity mix plotting](https://github.com/user-attachments/assets/aaed6b7c-77d9-4b8c-96e6-771991140636)' split by technology and region (state).
 
 ![image](https://github.com/user-attachments/assets/7eb8a780-a730-49d5-9ac6-fb1480b3c0c5)
 
