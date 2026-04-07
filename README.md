@@ -69,4 +69,5 @@ Pet project study that studies the drivers of free kick (penalty) data in the AF
 
 ![image](https://github.com/user-attachments/assets/edd42b22-65be-4025-ae50-d1004524314a)
 
+2026 Update: This study has been fully fleshed out and available in [this repository ]([url](https://github.com/nickvanschoten/afl-covid-study/tree/main)) 
 
